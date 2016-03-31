@@ -1,1 +1,1 @@
-# CI-Ansible-Tripleo a.ka CAT
+# CI-Ansible-Tripleo a.k.a CAT
