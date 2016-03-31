@@ -1,0 +1,8 @@
+pbr>=1.6
+ansible==2.0.0
+#-e git+https://github.com/redhat-openstack/tripleo-quickstart.git@master#egg=tripleo-quickstart
+#-e git+https://github.com/redhat-openstack/ansible-role-tripleo-overcloud.git@master#egg=ansible-role-tripleo-overcloud
+-e git+https://github.com/redhat-openstack/tripleo-quickstart.git#egg=tripleo-quickstart
+-e git+https://github.com/redhat-openstack/ansible-role-tripleo-overcloud.git#egg=ansible-role-tripleo-overcloud
+
+
