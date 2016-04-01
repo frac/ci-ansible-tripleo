@@ -30,7 +30,8 @@ fi
 
 VIRTHOST=$1
 RELEASE=$2
-HASH=$3
+PLAYBOOK=$3
+HASH=$4
 
 if [ -n "$RELEASE" ] && [ -n "$OPT_UNDERCLOUD_URL" ]; then
     echo "WARNING: ignoring release $RELEASE because you have" >&2
@@ -43,7 +44,9 @@ fi
 if [ -z "$HASH" ]; then
     HASH=current-passed-ci
 fi
-
+if [ -z "$PLAYBOOK" ]; then
+    PLAYBOOK=tripleo
+fi
 
 # we use this only if --undercloud-image-url was not provided on the
 # command line.
@@ -57,7 +60,7 @@ activate_venv
 export ANSIBLE_CONFIG=$PWD/ansible.cfg
 export ANSIBLE_INVENTORY=$OPT_WORKDIR/hosts
 
-ansible-playbook -vv playbooks/tripleo.yml \
+ansible-playbook -vv playbooks/$PLAYBOOK.yml \
     -e ansible_python_interpreter=/usr/bin/python \
     -e image_url=$OPT_UNDERCLOUD_URL \
     -e local_working_dir=$OPT_WORKDIR \
