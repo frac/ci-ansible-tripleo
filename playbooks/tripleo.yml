@@ -19,3 +19,9 @@
   roles:
     - tripleo/undercloud
     - ansible-role-tripleo-overcloud
+
+- name:  validate the overcloud
+  hosts: undercloud
+  gather_facts: no
+  roles:
+    - ansible-role-tripleo-overcloud-validate
