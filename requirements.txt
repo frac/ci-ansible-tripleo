@@ -2,8 +2,8 @@ pbr>=1.6
 ansible==2.0.0
 git+https://github.com/redhat-openstack/tripleo-quickstart.git#egg=tripleo-quickstart
 git+https://github.com/redhat-openstack/ansible-role-tripleo-overcloud.git#egg=ansible-role-tripleo-overcloud
-git+https://github.com/redhat-openstack/ansible-role-tripleo-overcloud.git#egg=ansible-role-tripleo-overcloud-validate
-#git+https://github.com/redhat-openstack/ansible-role-tripleo-overcloud.git#egg=ansible-role-tripleo-tempest
+git+https://github.com/redhat-openstack/ansible-role-tripleo-overcloud-validate.git#egg=ansible-role-tripleo-overcloud-validate
+git+https://github.com/redhat-openstack/ansible-role-tripleo-tempest.git#egg=ansible-role-tripleo-tempest
 git+https://github.com/redhat-openstack/ansible-role-tripleo-overcloud-upgrade.git#egg=ansible-role-tripleo-overcloud-upgrade
 
 #to pull in local development changes
