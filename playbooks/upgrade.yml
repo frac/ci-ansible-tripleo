@@ -1,0 +1,17 @@
+---
+- include: tripleo.yml
+
+- name:  Execute upgrade pre-tasks
+  hosts: overcloud
+  gather_facts: no
+  roles:
+    - { role: ansible-role-tripleo-overcloud-upgrade,
+        step_upgrade_set_repo: false,
+        step_upgrade_undercloud: false,
+        step_upgrade_overcloud: false }
+
+- name:  Upgrade the overcloud
+  hosts: undercloud
+  gather_facts: no
+  roles:
+    - { role: ansible-role-tripleo-overcloud-upgrade }

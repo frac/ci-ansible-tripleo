@@ -30,6 +30,7 @@ fi
 
 VIRTHOST=$1
 RELEASE=$2
+HASH=$3
 
 if [ -n "$RELEASE" ] && [ -n "$OPT_UNDERCLOUD_URL" ]; then
     echo "WARNING: ignoring release $RELEASE because you have" >&2
@@ -39,6 +40,10 @@ if [ -n "$RELEASE" ] && [ -n "$OPT_UNDERCLOUD_URL" ]; then
 elif [ -z "$RELEASE" ] && [ -z "$OPT_UNDERCLOUD_URL" ]; then
     RELEASE=mitaka
 fi
+if [ -z "$HASH" ]; then
+    HASH=current-passed-ci
+fi
+
 
 # we use this only if --undercloud-image-url was not provided on the
 # command line.
@@ -57,3 +62,4 @@ ansible-playbook -vv playbooks/tripleo.yml \
     -e image_url=$OPT_UNDERCLOUD_URL \
     -e local_working_dir=$OPT_WORKDIR \
     -e virthost=$VIRTHOST \
+    -e delorean_hash=$HASH
