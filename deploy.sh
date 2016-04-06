@@ -10,7 +10,6 @@ setup() {
     . $OPT_WORKDIR/bin/activate
 
     pip install -U -r requirements.txt
-    #python setup.py install
 
 }
 
@@ -32,6 +31,7 @@ VIRTHOST=$1
 RELEASE=$2
 PLAYBOOK=$3
 HASH=$4
+${OPT_CONFIG:=$PWD/config/net-iso.yml}
 
 if [ -n "$RELEASE" ] && [ -n "$OPT_UNDERCLOUD_URL" ]; then
     echo "WARNING: ignoring release $RELEASE because you have" >&2
@@ -57,11 +57,25 @@ setup
 echo "Activate virtualenv"
 activate_venv
 
+#use exported ansible variables
 export ANSIBLE_CONFIG=$PWD/ansible.cfg
 export ANSIBLE_INVENTORY=$OPT_WORKDIR/hosts
+export SSH_CONFIG=$OPT_WORKDIR/ssh.config.ansible
+export ANSIBLE_SSH_ARGS="-F ${SSH_CONFIG}"
+export ANSIBLE_TEST_PLUGINS=/usr/lib/python2.7/site-packages/tripleo-quickstart/playbooks/test_plugins:$VIRTUAL_ENV/usr/local/share/tripleo-quickstart/playbooks/test_plugins:playbooks/test_plugins
+export ANSIBLE_LIBRARY=/usr/lib/python2.7/site-packages/tripleo-quickstart/playbooks/library:$VIRTUAL_ENV/usr/local/share/tripleo-quickstart/playbooks/library:playbooks/library
+export ANSIBLE_ROLES_PATH=/usr/lib/python2.7/site-packages/tripleo-quickstart/playbooks/roles:$VIRTUAL_ENV/usr/local/share/tripleo-quickstart/playbooks/roles:$VIRTUAL_ENV/usr/local/share/
 
-ansible-playbook -vv playbooks/$PLAYBOOK.yml \
+cat <<EOF > $OPT_WORKDIR/ssh.config.ansible
+Host $VIRTHOST
+    User root
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+EOF
+
+ansible-playbook -vvvv playbooks/$PLAYBOOK.yml \
     --skip-tags "undercloud-post-install" \
+    -e @$OPT_CONFIG \
     -e ansible_python_interpreter=/usr/bin/python \
     -e image_url=$OPT_UNDERCLOUD_URL \
     -e local_working_dir=$OPT_WORKDIR \
