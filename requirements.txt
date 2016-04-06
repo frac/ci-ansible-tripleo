@@ -5,6 +5,7 @@ git+https://github.com/redhat-openstack/ansible-role-tripleo-overcloud.git#egg=a
 git+https://github.com/redhat-openstack/ansible-role-tripleo-overcloud-validate.git#egg=ansible-role-tripleo-overcloud-validate
 git+https://github.com/redhat-openstack/ansible-role-tripleo-tempest.git#egg=ansible-role-tripleo-tempest
 git+https://github.com/redhat-openstack/ansible-role-tripleo-overcloud-upgrade.git#egg=ansible-role-tripleo-overcloud-upgrade
+git+https://github.com/redhat-openstack/ansible-role-tripleo-undercloud-post.git/#egg=ansible-role-tripleo-undercloud-post
 
 #to pull in local development changes
 #file:///<dir>/ansible-role-tripleo-overcloud-validate/#egg=ansible-role-tripleo-overcloud-validate

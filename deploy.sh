@@ -61,6 +61,7 @@ export ANSIBLE_CONFIG=$PWD/ansible.cfg
 export ANSIBLE_INVENTORY=$OPT_WORKDIR/hosts
 
 ansible-playbook -vv playbooks/$PLAYBOOK.yml \
+    --skip-tags "undercloud-post-install" \
     -e ansible_python_interpreter=/usr/bin/python \
     -e image_url=$OPT_UNDERCLOUD_URL \
     -e local_working_dir=$OPT_WORKDIR \
