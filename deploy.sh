@@ -31,7 +31,7 @@ VIRTHOST=$1
 RELEASE=$2
 PLAYBOOK=$3
 HASH=$4
-${OPT_CONFIG:=$PWD/config/net-iso.yml}
+: ${OPT_CONFIG:=$PWD/config/net-iso.yml}
 
 if [ -n "$RELEASE" ] && [ -n "$OPT_UNDERCLOUD_URL" ]; then
     echo "WARNING: ignoring release $RELEASE because you have" >&2
