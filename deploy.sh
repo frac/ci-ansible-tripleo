@@ -18,8 +18,56 @@ activate_venv() {
 }
 
 usage() {
-    echo "$0: usage: $0 [options] virthost [release]"
+    echo "$0: usage: $0 [options] virthost"
+    echo "    -e, --extra-vars <file> [-e, --extra-vars <file2> ...]  Use specific file(s) for setting additional Ansible variables"
+    echo "    -b, --build <build>    Specify a build to be used. Defaults to 'current-passed-ci'"
+    echo "    -p, --playbook <playbook>    Specify playbook to be executed. Defaults to 'tripleo'"
+    echo "    -r, --release <release>    Specify version of OpenStack to deploy. Defaults to 'mitaka'"
+    echo "    -h, --help    Display this help and exit"
 }
+
+while [ "x$1" != "x" ]; do
+    case "$1" in
+
+        --extra-vars|-e)
+            EXTRA_VARS_FILE="$EXTRA_VARS_FILE-e @$2 "
+            shift
+            ;;
+
+        --build|-b)
+            BUILD=$2
+            ;;
+
+        --help|-h)
+            usage
+            exit
+            ;;
+
+        --playbook|-p)
+            PLAYBOOK=$2
+            shift
+            ;;
+
+        --release|-r)
+            RELEASE=$2
+            shift
+            ;;
+
+        --) shift
+            break
+            ;;
+
+        -*) echo "ERROR: unknown option: $1" >&2
+            usage >&2
+            exit 2
+            ;;
+
+        *)  break
+            ;;
+    esac
+
+    shift
+done
 
 if [ "$#" -lt 1 ]; then
     echo "ERROR: You must specify a target machine." >&2
@@ -41,8 +89,8 @@ if [ -n "$RELEASE" ] && [ -n "$OPT_UNDERCLOUD_URL" ]; then
 elif [ -z "$RELEASE" ] && [ -z "$OPT_UNDERCLOUD_URL" ]; then
     RELEASE=mitaka
 fi
-if [ -z "$HASH" ]; then
-    HASH=current-passed-ci
+if [ -z "BUILD" ]; then
+    BUILD=current-passed-ci
 fi
 if [ -z "$PLAYBOOK" ]; then
     PLAYBOOK=tripleo
@@ -58,7 +106,6 @@ echo "Activate virtualenv"
 activate_venv
 
 #use exported ansible variables
-export ANSIBLE_CONFIG=$PWD/ansible.cfg
 export ANSIBLE_INVENTORY=$OPT_WORKDIR/hosts
 export SSH_CONFIG=$OPT_WORKDIR/ssh.config.ansible
 export ANSIBLE_SSH_ARGS="-F ${SSH_CONFIG}"
@@ -73,11 +120,14 @@ Host $VIRTHOST
     UserKnownHostsFile=/dev/null
 EOF
 
-ansible-playbook -vvvv playbooks/$PLAYBOOK.yml \
+echo "Executing Ansible..."
+set -x
+ansible-playbook -vv playbooks/$PLAYBOOK.yml \
     --skip-tags "undercloud-post-install" \
     -e @$OPT_CONFIG \
     -e ansible_python_interpreter=/usr/bin/python \
     -e image_url=$OPT_UNDERCLOUD_URL \
     -e local_working_dir=$OPT_WORKDIR \
     -e virthost=$VIRTHOST \
-    -e delorean_hash=$HASH
+    -e delorean_hash=BUILD \
+    $EXTRA_VARS_FILE
