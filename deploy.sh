@@ -1,11 +1,20 @@
 #!/bin/bash
-
 : ${OPT_BOOTSTRAP:=1}
 : ${OPT_SYSTEM_PACKAGES:=0}
-: ${OPT_WORKDIR:=$HOME/.cat}
+: ${OPT_WORKDIR:=$PWD/.cat}
+: ${OPT_CLEANUP:=0}
+
+clean_venv() {
+    if [ -d $OPT_WORKDIR ]; then
+        rm -rf $OPT_WORKDIR
+    fi
+}
 
 setup() {
 
+    if [ "$OPT_CLEANUP" = 1 ]; then
+        clean_venv
+    fi
     virtualenv $( [ "$OPT_SYSTEM_PACKAGES" = 1 ] && printf -- "--system-site-packages\n" ) $OPT_WORKDIR
     . $OPT_WORKDIR/bin/activate
 
@@ -23,12 +32,12 @@ usage() {
     echo "    -b, --build <build>    Specify a build to be used. Defaults to 'current-passed-ci'"
     echo "    -p, --playbook <playbook>    Specify playbook to be executed. Defaults to 'tripleo'"
     echo "    -r, --release <release>    Specify version of OpenStack to deploy. Defaults to 'mitaka'"
+    echo "    -c, --clean    Clean the virtualenv before running a deployment"
     echo "    -h, --help    Display this help and exit"
 }
 
 while [ "x$1" != "x" ]; do
     case "$1" in
-
         --extra-vars|-e)
             EXTRA_VARS_FILE="$EXTRA_VARS_FILE-e @$2 "
             shift
@@ -51,6 +60,10 @@ while [ "x$1" != "x" ]; do
         --release|-r)
             RELEASE=$2
             shift
+            ;;
+
+        --clean|-c)
+            OPT_CLEANUP=1
             ;;
 
         --) shift
@@ -77,8 +90,6 @@ fi
 
 VIRTHOST=$1
 RELEASE=$2
-PLAYBOOK=$3
-HASH=$4
 : ${OPT_CONFIG:=$PWD/config/net-iso.yml}
 
 if [ -n "$RELEASE" ] && [ -n "$OPT_UNDERCLOUD_URL" ]; then
@@ -120,6 +131,7 @@ Host $VIRTHOST
     UserKnownHostsFile=/dev/null
 EOF
 
+echo "Installing OpenStack ${RELEASE:+"$RELEASE "}on host $VIRTHOST"
 echo "Executing Ansible..."
 set -x
 ansible-playbook -vv playbooks/$PLAYBOOK.yml \
@@ -129,5 +141,5 @@ ansible-playbook -vv playbooks/$PLAYBOOK.yml \
     -e image_url=$OPT_UNDERCLOUD_URL \
     -e local_working_dir=$OPT_WORKDIR \
     -e virthost=$VIRTHOST \
-    -e delorean_hash=BUILD \
+    -e delorean_hash=$BUILD \
     $EXTRA_VARS_FILE
