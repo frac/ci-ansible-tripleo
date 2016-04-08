@@ -117,12 +117,12 @@ echo "Activate virtualenv"
 activate_venv
 
 #use exported ansible variables
-export ANSIBLE_INVENTORY=$OPT_WORKDIR/hosts
-export SSH_CONFIG=$OPT_WORKDIR/ssh.config.ansible
-export ANSIBLE_SSH_ARGS="-F ${SSH_CONFIG}"
-export ANSIBLE_TEST_PLUGINS=/usr/lib/python2.7/site-packages/tripleo-quickstart/playbooks/test_plugins:$VIRTUAL_ENV/usr/local/share/tripleo-quickstart/playbooks/test_plugins:playbooks/test_plugins
-export ANSIBLE_LIBRARY=/usr/lib/python2.7/site-packages/tripleo-quickstart/playbooks/library:$VIRTUAL_ENV/usr/local/share/tripleo-quickstart/playbooks/library:playbooks/library
-export ANSIBLE_ROLES_PATH=/usr/lib/python2.7/site-packages/tripleo-quickstart/playbooks/roles:$VIRTUAL_ENV/usr/local/share/tripleo-quickstart/playbooks/roles:$VIRTUAL_ENV/usr/local/share/
+
+source ansible_env
+env | grep ANSIBLE
+echo " "; echo " "
+
+# add the virthost to the ssh config
 
 cat <<EOF > $OPT_WORKDIR/ssh.config.ansible
 Host $VIRTHOST
