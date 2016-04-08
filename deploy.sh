@@ -112,9 +112,9 @@ fi
 : ${OPT_UNDERCLOUD_URL:=https://ci.centos.org/artifacts/rdo/images/${RELEASE}/delorean/stable/undercloud.qcow2}
 
 echo "Setup ansible-tripleo-ci virtualenv and install dependencies"
-setup
+#setup
 echo "Activate virtualenv"
-activate_venv
+#activate_venv
 
 #use exported ansible variables
 
@@ -124,12 +124,14 @@ echo " "; echo " "
 
 # add the virthost to the ssh config
 
-cat <<EOF > $OPT_WORKDIR/ssh.config.ansible
+if [ ! -f $OPT_WORKDIR/ssh.config.ansible ] || [ `grep --quiet "Host $VIRTHOST" $OPT_WORKDIR/ssh.config.ansible` ]; then
+cat <<EOF >> $OPT_WORKDIR/ssh.config.ansible
 Host $VIRTHOST
     User root
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
 EOF
+fi
 
 echo "Installing OpenStack ${RELEASE:+"$RELEASE "}on host $VIRTHOST"
 echo "Executing Ansible..."
