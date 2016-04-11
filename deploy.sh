@@ -1,52 +1,79 @@
 #!/bin/bash
-: ${OPT_BOOTSTRAP:=1}
 : ${OPT_SYSTEM_PACKAGES:=0}
 : ${OPT_WORKDIR:=$PWD/.cat}
 : ${OPT_CLEANUP:=0}
-: ${OPT_CONFIG:=$PWD/config/net-iso.yml}
+: ${REQUIREMENTS:=requirements.txt}
 
-clean_venv() {
+clean_virtualenv() {
     if [ -d $OPT_WORKDIR ]; then
         rm -rf $OPT_WORKDIR
     fi
 }
 
+install_deps () {
+    yum -y install git virtualenv gcc libyaml
+}
+
 setup() {
 
     if [ "$OPT_CLEANUP" = 1 ]; then
-        clean_venv
+        clean_virtualenv
     fi
     virtualenv $( [ "$OPT_SYSTEM_PACKAGES" = 1 ] && printf -- "--system-site-packages\n" ) $OPT_WORKDIR
     . $OPT_WORKDIR/bin/activate
 
-    pip install -U -r requirements.txt
+    if [ "$OPT_CLONE" == 1 ]; then
+        if ! [ -d "$OPT_WORKDIR/ci-ansible-tripleo" ]; then
+            echo "Cloning ci-ansible-tripleo repository..."
+            git clone ssh://github.com/redhat-openstack/ci-ansible-tripleo \
+                $OPT_WORKDIR/ci-ansible-tripleo
+        fi
 
+        cd $OPT_WORKDIR/ci-ansible-tripleo
+        git remote update
+        git checkout --quiet origin/master
+    fi
+
+    pip install -r $REQUIREMENTS
 }
 
-activate_venv() {
-    . $OPT_WORKDIR/bin/activate
-}
 
 usage() {
-    echo "$0: usage: $0 [options] virthost"
-    echo "    -e, --extra-vars <file> [-e, --extra-vars <file2> ...]  Use specific file(s) for setting additional Ansible variables"
-    echo "    -f, --config-file <file> select config file, default is config/net-iso.yml"
-    echo "    -b, --build <build>    Specify a build to be used. Defaults to 'current-passed-ci'"
-    echo "    -p, --playbook <playbook>    Specify playbook to be executed. Defaults to 'tripleo'"
-    echo "    -r, --release <release>    Specify version of OpenStack to deploy. Defaults to 'mitaka'"
-    echo "    -c, --clean    Clean the virtualenv before running a deployment"
-    echo "    -h, --help    Display this help and exit"
+    echo "$0 [options] virthost"
+    echo ""
+    echo "   -i, --install-deps            Install C.A.T. dependencies (git, virtualenv, gcc, libyaml)"
+    echo ""
+    echo " * Basic options w/ defaults"
+    echo "   -p, --playbook <playbook>     default: 'tripleo', Specify playbook to be executed."
+    echo "   -z, --requirements <file>     default: 'requirements.txt', Specify the python setup tools requirements file."
+    echo "   -b, --build <build>           default: 'current-passed-ci', Specify a build to be used. "
+    echo "   -r, --release <release>       default: 'mitaka', Specify version of OpenStack to deploy. "
+    echo "   -f, --config-file <file>      select config file, default is config/net-iso.yml"
+    echo "   -e, --extra-vars <file>       Additional Ansible variables.  Supports multiple ('-e f1 -e f2')"
+    echo ""
+    echo " * Advanced options"
+    echo "   -u, --undercloud-url <URI>    overrides --release.  URI for location of undercloud image"
+    echo "   -w, --working-dir <directory> Location of ci-ansible-tripleo sources and virtual env"
+    echo "   -c, --clean                   Clean the virtualenv before running a deployment"
+    echo "   -g, --git-clone               Git clone the ci-ansible-tripleo repo"
+    echo "   -s, --system-site-packages    Create virtual env with access to local site packages"
+    echo "   -v, --ansible-debug           Invoke ansible-playbook with -vvvv "
+    echo "   -h, -?, --help                Display this help and exit"
 }
 
 while [ "x$1" != "x" ]; do
     case "$1" in
-        --extra-vars|-e)
-            EXTRA_VARS_FILE="$EXTRA_VARS_FILE-e @$2 "
+        --install-deps|-i)
+            OPT_INSTALL_DEPS=1
+            ;;
+
+        --playbook|-p)
+            PLAYBOOK=$2
             shift
             ;;
 
-        --config-file|-f)
-            OPT_CONFIG=$2
+        --requirements|-z)
+            REQUIREMENTS=$2
             shift
             ;;
 
@@ -55,23 +82,51 @@ while [ "x$1" != "x" ]; do
             shift
             ;;
 
-        --help|-h)
-            usage
-            exit
-            ;;
-
-        --playbook|-p)
-            PLAYBOOK=$2
-            shift
-            ;;
-
         --release|-r)
             RELEASE=$2
             shift
             ;;
 
+        --config-file|-f)
+            OPT_CONFIG=$2
+            shift
+            ;;
+
+        --extra-vars|-e)
+            EXTRA_VARS_FILE="$EXTRA_VARS_FILE-e @$2 "
+            shift
+            ;;
+
+        # Advanced Options
+        --undercloud-url|-u)
+            OPT_UNDERCLOUD_URL=$2
+            shift
+            ;;
+
+        --working-dir|-w)
+            OPT_WORKDIR=$2
+            shift
+            ;;
+
         --clean|-c)
             OPT_CLEANUP=1
+            ;;
+
+        --git-clone|-g)
+            OPT_CLONE=1
+            ;;
+
+        --system-site-packages|-s)
+            OPT_SYSTEM_PACKAGES=1
+            ;;
+
+        --ansible-debug|-v)
+            OPT_DEBUG_ANSIBLE=1
+            ;;
+
+        --help|-h|-?)
+            usage
+            exit
             ;;
 
         --) shift
@@ -89,6 +144,22 @@ while [ "x$1" != "x" ]; do
 
     shift
 done
+
+if [ "$OPT_CLONE" != 1 ]; then
+    CAT_DIR=.
+else
+    CAT_DIR=$OPT_WORKDIR/ci-ansible-tripleo
+fi
+
+# Set this default after option processing, because the default depends
+# on another option.
+: ${OPT_CONFIG:=$CAT_DIR/config/net-iso.yml}
+
+if [ "$OPT_INSTALL_DEPS" = 1 ]; then
+    echo "NOTICE: installing dependencies (git, virtualenv, gcc, libyaml)"
+    install_deps
+    exit $?
+fi
 
 if [ "$#" -lt 1 ]; then
     echo "ERROR: You must specify a target machine." >&2
@@ -120,7 +191,7 @@ fi
 echo "Setup ansible-tripleo-ci virtualenv and install dependencies"
 setup
 echo "Activate virtualenv"
-activate_venv
+. $OPT_WORKDIR/bin/activate
 
 # use exported ansible variables
 source ansible_env
@@ -138,10 +209,16 @@ Host $VIRTHOST
 EOF
 fi
 
+if [ "$OPT_DEBUG_ANSIBLE" = 1 ]; then
+    VERBOSITY=vvvv
+else
+    VERBOSITY=vv
+fi
+
 echo "Installing OpenStack ${RELEASE:+"$RELEASE "}on host $VIRTHOST"
 echo "Executing Ansible..."
 set -x
-ansible-playbook -vv playbooks/$PLAYBOOK.yml \
+ansible-playbook -$VERBOSITY $CAT_DIR/playbooks/$PLAYBOOK.yml \
     --skip-tags "undercloud-post-install" \
     -e @$OPT_CONFIG \
     -e ansible_python_interpreter=/usr/bin/python \
