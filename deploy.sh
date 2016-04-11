@@ -112,12 +112,11 @@ fi
 : ${OPT_UNDERCLOUD_URL:=https://ci.centos.org/artifacts/rdo/images/${RELEASE}/delorean/stable/undercloud.qcow2}
 
 echo "Setup ansible-tripleo-ci virtualenv and install dependencies"
-#setup
+setup
 echo "Activate virtualenv"
-#activate_venv
+activate_venv
 
-#use exported ansible variables
-
+# use exported ansible variables
 source ansible_env
 env | grep ANSIBLE
 echo " "; echo " "
