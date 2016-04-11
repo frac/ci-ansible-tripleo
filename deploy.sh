@@ -45,6 +45,7 @@ while [ "x$1" != "x" ]; do
 
         --build|-b)
             BUILD=$2
+            shift
             ;;
 
         --help|-h)
@@ -89,7 +90,6 @@ if [ "$#" -lt 1 ]; then
 fi
 
 VIRTHOST=$1
-RELEASE=$2
 : ${OPT_CONFIG:=$PWD/config/net-iso.yml}
 
 if [ -n "$RELEASE" ] && [ -n "$OPT_UNDERCLOUD_URL" ]; then
