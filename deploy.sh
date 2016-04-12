@@ -3,6 +3,7 @@
 : ${OPT_SYSTEM_PACKAGES:=0}
 : ${OPT_WORKDIR:=$PWD/.cat}
 : ${OPT_CLEANUP:=0}
+: ${OPT_CONFIG:=$PWD/config/net-iso.yml}
 
 clean_venv() {
     if [ -d $OPT_WORKDIR ]; then
@@ -29,6 +30,7 @@ activate_venv() {
 usage() {
     echo "$0: usage: $0 [options] virthost"
     echo "    -e, --extra-vars <file> [-e, --extra-vars <file2> ...]  Use specific file(s) for setting additional Ansible variables"
+    echo "    -f, --config-file <file> select config file, default is config/net-iso.yml"
     echo "    -b, --build <build>    Specify a build to be used. Defaults to 'current-passed-ci'"
     echo "    -p, --playbook <playbook>    Specify playbook to be executed. Defaults to 'tripleo'"
     echo "    -r, --release <release>    Specify version of OpenStack to deploy. Defaults to 'mitaka'"
@@ -40,6 +42,11 @@ while [ "x$1" != "x" ]; do
     case "$1" in
         --extra-vars|-e)
             EXTRA_VARS_FILE="$EXTRA_VARS_FILE-e @$2 "
+            shift
+            ;;
+
+        --config-file|-f)
+            OPT_CONFIG=$2
             shift
             ;;
 
@@ -90,7 +97,6 @@ if [ "$#" -lt 1 ]; then
 fi
 
 VIRTHOST=$1
-: ${OPT_CONFIG:=$PWD/config/net-iso.yml}
 
 if [ -n "$RELEASE" ] && [ -n "$OPT_UNDERCLOUD_URL" ]; then
     echo "WARNING: ignoring release $RELEASE because you have" >&2
