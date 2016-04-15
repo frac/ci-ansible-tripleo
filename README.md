@@ -11,6 +11,7 @@ $ ./deploy.sh --help
 
  * Basic options w/ defaults
    -p, --playbook <playbook>     default: 'tripleo', Specify playbook to be executed.
+   -z, --requirements <file>     default: 'requirements.txt', Specify the python setup tools requirements file.
    -b, --build <build>           default: 'current-passed-ci', Specify a build to be used.
    -r, --release <release>       default: 'mitaka', Specify version of OpenStack to deploy.
    -f, --config-file <file>      select config file, default is config/net-iso.yml
@@ -109,5 +110,7 @@ A multi-line description of the change, ideally with
 context and/or URL to github issue.
 ```
 
-To address feedback and iterate on reviews, ammend your existing commit and run "git review" again
+To address feedback and iterate on reviews, amend your existing commit (git commit --amend) and run "git review" again
+
+
 
