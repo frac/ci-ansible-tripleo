@@ -46,13 +46,11 @@ usage() {
     echo " * Basic options w/ defaults"
     echo "   -p, --playbook <playbook>     default: 'tripleo', Specify playbook to be executed."
     echo "   -z, --requirements <file>     default: 'requirements.txt', Specify the python setup tools requirements file."
-    echo "   -b, --build <build>           default: 'current-passed-ci', Specify a build to be used. "
     echo "   -r, --release <release>       default: 'mitaka', Specify version of OpenStack to deploy. "
     echo "   -f, --config-file <file>      select config file, default is config/net-iso.yml"
     echo "   -e, --extra-vars <file>       Additional Ansible variables.  Supports multiple ('-e f1 -e f2')"
     echo ""
     echo " * Advanced options"
-    echo "   -u, --undercloud-url <URI>    overrides --release.  URI for location of undercloud image"
     echo "   -w, --working-dir <directory> Location of ci-ansible-tripleo sources and virtual env"
     echo "   -c, --clean                   Clean the virtualenv before running a deployment"
     echo "   -g, --git-clone               Git clone the ci-ansible-tripleo repo"
@@ -77,11 +75,6 @@ while [ "x$1" != "x" ]; do
             shift
             ;;
 
-        --build|-b)
-            BUILD=$2
-            shift
-            ;;
-
         --release|-r)
             RELEASE=$2
             shift
@@ -98,11 +91,6 @@ while [ "x$1" != "x" ]; do
             ;;
 
         # Advanced Options
-        --undercloud-url|-u)
-            OPT_UNDERCLOUD_URL=$2
-            shift
-            ;;
-
         --working-dir|-w)
             OPT_WORKDIR=$2
             shift
@@ -169,12 +157,10 @@ fi
 
 VIRTHOST=$1
 
-if [ -n "$RELEASE" ] && [ -n "$OPT_UNDERCLOUD_URL" ]; then
+if [ -n "$RELEASE" ]; then
     echo "WARNING: ignoring release $RELEASE because you have" >&2
-    echo "         provided an explicit undercloud image URL." >&2
 
-    RELEASE=
-elif [ -z "$RELEASE" ] && [ -z "$OPT_UNDERCLOUD_URL" ]; then
+elif [ -z "$RELEASE" ]; then
     RELEASE=mitaka
 fi
 if [ -z "BUILD" ]; then
@@ -183,10 +169,6 @@ fi
 if [ -z "$PLAYBOOK" ]; then
     PLAYBOOK=tripleo
 fi
-
-# we use this only if --undercloud-image-url was not provided on the
-# command line.
-: ${OPT_UNDERCLOUD_URL:=http://buildlogs.centos.org/centos/7/cloud/x86_64/tripleo_images/${RELEASE}/delorean/undercloud.qcow2}
 
 echo "Setup ansible-tripleo-ci virtualenv and install dependencies"
 setup
@@ -221,9 +203,8 @@ set -x
 ansible-playbook -$VERBOSITY $CAT_DIR/playbooks/$PLAYBOOK.yml \
     --skip-tags "undercloud-post-install" \
     -e @$OPT_CONFIG \
+    -e @config/$RELEASE.yml \
     -e ansible_python_interpreter=/usr/bin/python \
-    -e image_url=$OPT_UNDERCLOUD_URL \
     -e local_working_dir=$OPT_WORKDIR \
     -e virthost=$VIRTHOST \
-    -e delorean_hash=$BUILD \
     $EXTRA_VARS_FILE

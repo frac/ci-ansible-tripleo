@@ -12,13 +12,11 @@ $ ./deploy.sh --help
  * Basic options w/ defaults
    -p, --playbook <playbook>     default: 'tripleo', Specify playbook to be executed.
    -z, --requirements <file>     default: 'requirements.txt', Specify the python setup tools requirements file.
-   -b, --build <build>           default: 'current-passed-ci', Specify a build to be used.
    -r, --release <release>       default: 'mitaka', Specify version of OpenStack to deploy.
    -f, --config-file <file>      select config file, default is config/net-iso.yml
    -e, --extra-vars <file>       Additional Ansible variables.  Supports multiple ('-e f1 -e f2')
 
  * Advanced options
-   -u, --undercloud-url <URI>    overrides --release.  URI for location of undercloud image
    -w, --working-dir <directory> Location of ci-ansible-tripleo sources and virtual env
    -c, --clean                   Clean the virtualenv before running a deployment
    -n, --no-clone                Skip cloning repo

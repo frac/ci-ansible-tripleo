@@ -2,3 +2,4 @@ ansible.cfg*
 *.pyc
 .idea/*
 .cat
+config/rhos*

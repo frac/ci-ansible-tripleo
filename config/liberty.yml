@@ -1,0 +1,2 @@
+release: liberty
+image_url: https://ci.centos.org/artifacts/rdo/images/liberty/delorean/stable/undercloud.qcow2
