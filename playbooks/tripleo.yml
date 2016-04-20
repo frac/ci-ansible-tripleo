@@ -31,6 +31,12 @@
   roles:
     - ansible-role-tripleo-overcloud
 
+- name:  Inventory the overcloud
+  hosts: undercloud
+  gather_facts: no
+  roles:
+    - ansible-role-tripleo-inventory
+
 - name:  validate the overcloud
   hosts: undercloud
   gather_facts: no
